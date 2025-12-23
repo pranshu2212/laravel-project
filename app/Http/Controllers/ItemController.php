@@ -7,10 +7,16 @@ use App\Models\Item;
 
 class ItemController extends Controller
 {
-    public function index()
-    {
-        return Item::latest()->get();
+ public function index(Request $request)
+{
+    $query = Item::query();
+
+    if ($request->search) {
+        $query->where('name', 'like', '%' . $request->search . '%');
     }
+    return response()->json($query->latest()->get());
+}
+
 
     public function show($id)
     {
@@ -29,12 +35,11 @@ class ItemController extends Controller
         ]);
 
         $path = null;
-
         if ($request->hasFile('img')) {
             $path = $request->file('img')->store('items', 'public');
         }
 
-        $item = Item::create([
+        return Item::create([
             'name' => $request->name,
             'desc' => $request->desc,
             'price' => $request->price,
@@ -42,11 +47,6 @@ class ItemController extends Controller
             'category' => $request->category,
             'img' => $path,
         ]);
-
-        return response()->json([
-            'message' => 'Item created successfully',
-            'item' => $item
-        ], 201);
     }
 
     public function update(Request $request, $id)
@@ -59,12 +59,12 @@ class ItemController extends Controller
 
         $item->update($request->except('img'));
 
-        return response()->json($item);
+        return response()->json(['message' => 'Updated']);
     }
 
     public function destroy($id)
     {
         Item::destroy($id);
-        return response()->json(['message' => 'Item deleted']);
+        return response()->json(['message' => 'Deleted']);
     }
 }
